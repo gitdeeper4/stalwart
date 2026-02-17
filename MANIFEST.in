@@ -1,0 +1,23 @@
+include README.md
+include DESCRIPTION.md
+include PROJECT_SUMMARY.md
+include AUTHORS.md
+include CHANGELOG.md
+include CONTRIBUTING.md
+include INSTALL.md
+include DEPLOY.md
+include LICENSE
+include requirements.txt
+include pyproject.toml
+include setup.cfg
+include .coveragerc
+include .pre-commit-config.yaml
+include .gitignore
+
+recursive-include src/stalwart *.py
+recursive-include tests *.py
+recursive-include docs *
+
+exclude .gitlab-ci.yml
+exclude .readthedocs.yaml
+exclude netlify.toml

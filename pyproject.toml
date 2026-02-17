@@ -1,0 +1,178 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stalwart"
+dynamic = ["version"]
+description = "STALWART: Sensor-Driven Predictive Framework for Structural Health Monitoring and Failure Prevention in Long-Span Bridge Infrastructure"
+readme = "README.md"
+authors = [
+    {name = "Samir Baladi", email = "gitdeeper@gmail.com"},
+    {name = "Robert Johnson"},
+    {name = "Michael Chen"},
+    {name = "Klaus Schmidt"},
+    {name = "Sarah Williams"},
+]
+maintainers = [
+    {name = "Samir Baladi", email = "gitdeeper@gmail.com"},
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Engineering",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Civil Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "pandas>=2.0.0",
+    "matplotlib>=3.7.0",
+    "scikit-learn>=1.3.0",
+    "pydantic>=2.0.0",
+    "pyserial>=3.5",
+    "smbus2>=0.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.9.0",
+    "pre-commit>=2.0.0",
+]
+docs = [
+    "sphinx>=4.0.0",
+    "sphinx-rtd-theme>=1.0.0",
+    "sphinx-autodoc-typehints>=1.19.0",
+]
+ml = [
+    "tensorflow>=2.13.0",
+    "torch>=2.0.0",
+    "xgboost>=1.7.0",
+    "lightgbm>=3.3.0",
+    "optuna>=3.0.0",
+]
+dashboard = [
+    "fastapi>=0.95.0",
+    "uvicorn>=0.21.0",
+    "plotly>=5.13.0",
+    "dash>=2.9.0",
+    "streamlit>=1.20.0",
+    "grafana-api>=1.0.0",
+]
+database = [
+    "timescaledb>=2.8.0",
+    "psycopg2>=2.9.0",
+    "sqlalchemy>=2.0.0",
+    "influxdb>=5.3.0",
+    "redis>=4.5.0",
+]
+field = [
+    "pyserial>=3.5",
+    "smbus2>=0.4.0",
+    "RPi.GPIO>=0.7.0",
+    "Adafruit-Blinka>=8.0.0",
+]
+
+[project.urls]
+Homepage = "https://stalwart-bridge.netlify.app"
+Documentation = "https://stalwart.readthedocs.io"
+Repository = "https://gitlab.com/gitdeeper4/stalwart"
+Changelog = "https://gitlab.com/gitdeeper4/stalwart/-/blob/main/CHANGELOG.md"
+Issues = "https://gitlab.com/gitdeeper4/stalwart/-/issues"
+DOI = "https://doi.org/10.5281/zenodo.18655299"
+
+[project.scripts]
+stalwart-monitor = "stalwart.cli:monitor"
+stalwart-analyze = "stalwart.cli:analyze"
+stalwart-dashboard = "stalwart.cli:dashboard"
+stalwart-calibrate = "stalwart.cli:calibrate"
+stalwart-simulate = "stalwart.cli:simulate"
+
+[tool.setuptools_scm]
+write_to = "src/stalwart/_version.py"
+
+[tool.black]
+line-length = 88
+target-version = ['py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+strict_optional = true
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "online: marks tests that require internet connection",
+    "sensor: marks tests that require actual sensor hardware",
+]
+
+[tool.coverage.run]
+source = ["src/stalwart"]
+omit = ["*/tests/*", "*/test_*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "pass",
+    "return NotImplemented",
+]
+show_missing = true
+skip_covered = true
+precision = 2

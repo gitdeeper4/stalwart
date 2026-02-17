@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+message: "If you use STALWART in your research, please cite it as below."
+title: "STALWART: Sensor-Driven Predictive Framework for Structural Health Monitoring and Failure Prevention in Long-Span Bridge Infrastructure"
+authors:
+  - family-names: "Baladi"
+    given-names: "Samir"
+    email: "gitdeeper@gmail.com"
+    orcid: "https://orcid.org/0009-0003-8903-0029"
+    affiliation: "Department of Civil and Structural Engineering"
+  - family-names: "Johnson"
+    given-names: "Robert"
+    affiliation: "Bridge Instrumentation Laboratory, Sensor Technology Division"
+  - family-names: "Chen"
+    given-names: "Michael"
+    affiliation: "Computational Mechanics Research Center"
+  - family-names: "Schmidt"
+    given-names: "Klaus"
+    affiliation: "Materials Science and Corrosion Engineering Institute"
+  - family-names: "Williams"
+    given-names: "Sarah"
+    affiliation: "Structural Dynamics and Monitoring Systems Laboratory"
+
+version: 1.0.0
+date-released: 2026-02-16
+doi: 10.5281/zenodo.18655299
+repository-code: "https://gitlab.com/gitdeeper4/stalwart"
+license: "MIT"
+keywords:
+  - "bridge safety"
+  - "structural health monitoring"
+  - "aeroelastic flutter"
+  - "strain accumulation"
+  - "predictive maintenance"
+  - "sensor networks"
+  - "corrosion detection"
+  - "frequency domain analysis"
+  - "load testing"
+
+references:
+  - title: "STALWART: Multi-Parameter Real-Time Assessment System Based on Aeroelastic, Mechanical, and Corrosion Indicators"
+    year: 2026
+    journal: "Journal of Bridge Engineering and Structural Health Monitoring"
+    authors: ["Baladi, S.", "Johnson, R.", "Chen, M.", "Schmidt, K.", "Williams, S."]
+
+funding:
+  - "National Science Foundation (NSF) Grant No. CMMI-XXXXXX"
+  - "Federal Highway Administration (FHWA) Cooperative Agreement No. DTFH61-XX-X-XXXXX"
+  - "California Department of Transportation (Caltrans) Contract No. 65AXXXX"
+
+dataset: "10.5281/zenodo.XXXXXX"
+documentation: "https://stalwart.readthedocs.io"

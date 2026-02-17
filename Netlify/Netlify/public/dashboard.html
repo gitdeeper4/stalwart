@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌉 STALWART Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* الأنماط السابقة - نفس الشيء */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #2c5f7d; --secondary-color: #4a90b8; --accent-color: #f39c12;
+            --dark-bg: #1a2332; --light-bg: #f8f9fa; --text-dark: #2c3e50; --text-light: #ecf0f1;
+            --success: #27ae60; --warning: #f39c12; --danger: #e74c3c; --shadow: rgba(0,0,0,0.1);
+            --critical: #e74c3c; --high-risk: #e67e22; --caution: #f39c12; --warning-level: #f1c40f; --stable: #27ae60;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: var(--text-dark); overflow-x: hidden; }
+        .navbar { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); padding: 1rem 0; position: fixed; width: 100%; top: 0; z-index: 1000; box-shadow: 0 2px 10px var(--shadow); }
+        .nav-container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--text-light); text-decoration: none; display: flex; align-items: center; gap: 0.5rem; }
+        .nav-links { display: flex; gap: 2rem; list-style: none; }
+        .nav-links a { color: var(--text-light); text-decoration: none; font-weight: 500; transition: color 0.3s ease; }
+        .nav-links a:hover, .nav-links a.active { color: var(--accent-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 5px; }
+        .menu-toggle { display: none; background: none; border: none; color: var(--text-light); font-size: 1.5rem; cursor: pointer; }
+        .hero { background: linear-gradient(135deg, #1a2332 0%, #2c5f7d 50%, #4a90b8 100%); color: var(--text-light); padding: 120px 2rem 60px; text-align: center; position: relative; overflow: hidden; }
+        .hero-content { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+        .badge { background: rgba(255,255,255,0.1); color: var(--accent-color); padding: 8px 20px; border-radius: 20px; border: 1px solid var(--accent-color); font-size: 0.9rem; margin-bottom: 20px; display: inline-flex; align-items: center; gap: 8px; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; line-height: 1.2; }
+        .hero .subtitle { font-size: 1.3rem; margin-bottom: 1rem; color: var(--accent-color); font-weight: 600; }
+        .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.9; }
+        .dashboard-section { max-width: 1400px; margin: 0 auto; padding: 40px 5%; }
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 25px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 5px 15px var(--shadow); display: flex; align-items: center; gap: 20px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .stat-icon { width: 60px; height: 60px; background: rgba(44,95,125,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--primary-color); }
+        .stat-info h3 { font-size: 0.9rem; color: #666; font-weight: 500; margin-bottom: 5px; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: var(--primary-color); line-height: 1; }
+        .stat-unit { font-size: 0.9rem; color: var(--accent-color); margin-left: 5px; }
+        .map-section { display: grid; grid-template-columns: 1fr 350px; gap: 25px; margin-bottom: 30px; }
+        .map-container { border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px var(--shadow); height: 500px; }
+        #bridge-map { width: 100%; height: 100%; background: var(--light-bg); }
+        .stats-panel { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px var(--shadow); max-height: 500px; overflow-y: auto; }
+        .panel-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--primary-color); }
+        .bridge-stats { display: flex; flex-direction: column; gap: 12px; }
+        .bridge-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: rgba(44,95,125,0.05); border-radius: 8px; transition: transform 0.2s; }
+        .bridge-item:hover { background: rgba(44,95,125,0.1); transform: translateX(5px); }
+        .bridge-name { display: flex; align-items: center; gap: 8px; }
+        .bridge-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .bridge-risk { font-weight: 600; }
+        .leadtime-container { background: white; border-radius: 10px; padding: 20px 25px; margin-bottom: 30px; box-shadow: 0 5px 15px var(--shadow); }
+        .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .slider-title { display: flex; align-items: center; gap: 10px; color: var(--primary-color); font-weight: 600; }
+        .time-label { background: rgba(44,95,125,0.1); padding: 5px 15px; border-radius: 20px; color: var(--primary-color); font-weight: 600; }
+        .leadtime-display { font-size: 1.2rem; font-weight: 700; color: var(--primary-color); text-align: center; margin: 15px 0; padding: 10px; background: rgba(44,95,125,0.05); border-radius: 8px; }
+        input[type=range] { width: 100%; height: 6px; -webkit-appearance: none; background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%); border-radius: 3px; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; background: #fff; border-radius: 50%; cursor: pointer; border: 2px solid var(--primary-color); box-shadow: 0 0 15px var(--primary-color); transition: 0.2s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .slider-labels { display: flex; justify-content: space-between; margin-top: 10px; color: #666; font-size: 0.8rem; }
+        .charts-section { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 30px; }
+        .chart-container { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px var(--shadow); }
+        .chart-title { font-size: 1rem; color: #666; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+        .chart-title i { color: var(--primary-color); }
+        canvas { width: 100% !important; height: 250px !important; }
+        .bridges-header { display: flex; justify-content: space-between; align-items: center; margin: 30px 0 20px; }
+        .bridges-title { font-size: 1.8rem; display: flex; align-items: center; gap: 10px; color: var(--primary-color); }
+        .bridges-title i { color: var(--accent-color); }
+        .bridges-count { background: var(--primary-color); padding: 8px 16px; border-radius: 20px; color: white; border: none; font-weight: 600; }
+        .bridges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .bridge-card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px var(--shadow); border-left: 6px solid; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .bridge-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.15); }
+        .bridge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .bridge-name { font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: var(--primary-color); }
+        .bridge-location { font-size: 0.75rem; padding: 4px 12px; background: rgba(44,95,125,0.1); border-radius: 20px; color: var(--primary-color); text-transform: uppercase; }
+        .health-score { font-size: 2rem; font-weight: 800; margin-bottom: 10px; line-height: 1; display: flex; align-items: center; justify-content: space-between; }
+        .risk-badge { padding: 6px 16px; border-radius: 30px; font-weight: 600; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); margin-bottom: 15px; }
+        .warning-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; background: rgba(243,156,18,0.1); color: var(--accent-color); border: 1px solid var(--accent-color); }
+        .bridge-details { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
+        .detail-item { display: flex; flex-direction: column; }
+        .detail-label { font-size: 0.7rem; color: #666; margin-bottom: 5px; text-transform: uppercase; }
+        .detail-value { font-size: 1rem; font-weight: 600; }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .footer { background: #1a2332; color: var(--text-light); padding: 3rem 2rem 1.5rem; margin-top: 60px; }
+        .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 2rem; }
+        .footer-section h3 { color: var(--accent-color); margin-bottom: 1rem; font-size: 1.2rem; }
+        .footer-section ul { list-style: none; }
+        .footer-section ul li { margin-bottom: 0.5rem; }
+        .footer-section a { color: var(--text-light); text-decoration: none; transition: color 0.3s ease; }
+        .footer-section a:hover { color: var(--accent-color); }
+        .footer-bottom { max-width: 1200px; margin: 0 auto; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; opacity: 0.7; }
+        @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2,1fr); } .map-section { grid-template-columns: 1fr; } .charts-section { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .menu-toggle { display: block; } .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--primary-color); flex-direction: column; padding: 1rem 0; gap: 0; } .nav-links.active { display: flex; } .nav-links li { padding: 0.5rem 2rem; } .hero h1 { font-size: 2rem; } .stats-grid { grid-template-columns: 1fr; } .footer-container { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">🌉 STALWART</a>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/dashboard" class="active">Dashboard</a></li>
+                <li><a href="/documentation">Documentation</a></li>
+                <li><a href="https://gitlab.com/gitdeeper4/stalwart">GitLab</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="badge"><i class="fas fa-chart-line"></i> <span id="liveStatus">STALWART • 28 BRIDGES • LIVE</span></div>
+        <h1>🌉 Bridge Health Monitoring Dashboard</h1>
+        <p class="subtitle">Real-time structural health monitoring for strategic bridges</p>
+        <p>Monitoring <span id="totalBridgesCount" style="color: var(--accent-color); font-weight: 700;">28</span> bridges • System MRDI: <span id="systemMRDI" style="color: var(--accent-color);">9</span>/100</p>
+    </section>
+
+    <div class="dashboard-section">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-bridge"></i></div><div class="stat-info"><h3>Active Bridges</h3><div><span class="stat-number" id="activeBridges">28</span><span class="stat-unit">bridges</span></div></div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="stat-info"><h3>Critical Risk</h3><div><span class="stat-number" id="criticalCount">0</span><span class="stat-unit">bridges</span></div></div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-chart-line"></i></div><div class="stat-info"><h3>Early Warning</h3><div><span class="stat-number" id="warningCount">10</span><span class="stat-unit">bridges</span></div></div></div>
+            <div class="stat-card"><div class="stat-icon"><i class="fas fa-check-circle"></i></div><div class="stat-info"><h3>Stable Bridges</h3><div><span class="stat-number" id="stableCount">18</span><span class="stat-unit">bridges</span></div></div></div>
+        </div>
+
+        <div class="map-section">
+            <div class="map-container"><div id="bridge-map"></div></div>
+            <div class="stats-panel">
+                <div class="panel-title"><i class="fas fa-exclamation-circle"></i> High-Risk Bridges</div>
+                <div class="bridge-stats" id="riskStatsList"></div>
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <div style="display: flex; justify-content: space-between;"><span style="color: #666;">Last Update:</span><span style="color: var(--primary-color);" id="lastUpdate"></span></div>
+                    <div style="display: flex; justify-content: space-between;"><span style="color: #666;">Data Source:</span><span style="color: var(--primary-color);" id="dataSource">Supabase Production</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="leadtime-container">
+            <div class="slider-header">
+                <div class="slider-title"><i class="fas fa-clock"></i> <span>Early Warning Lead Time</span></div>
+                <span class="time-label" id="leadTimeLabel">12 months</span>
+            </div>
+            <input type="range" id="timeSlider" min="1" max="24" value="12" step="1">
+            <div class="slider-labels"><span>1mo</span><span>3mo</span><span>6mo</span><span>9mo</span><span>12mo</span><span>15mo</span><span>18mo</span><span>21mo</span><span>24mo</span></div>
+            <div class="leadtime-display" id="leadTimeDisplay">Filtering bridges with health below <span id="healthThreshold">75</span>%</div>
+        </div>
+
+        <div class="charts-section">
+            <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-pie"></i> Risk Distribution</div><canvas id="riskChart"></canvas></div>
+            <div class="chart-container"><div class="chart-title"><i class="fas fa-chart-bar"></i> Top 5 Critical Bridges</div><canvas id="criticalChart"></canvas></div>
+        </div>
+
+        <div class="bridges-header"><h2 class="bridges-title"><i class="fas fa-bridge"></i> Monitored Bridges</h2><span class="bridges-count" id="activeBridgesCount">28 Bridges</span></div>
+        <div id="bridgesContainer" class="bridges-grid"></div>
+    </div>
+
+      <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>🌉 STALWART</h3>
+                <p>Predictive Bridge Safety Monitoring System for Infrastructure Resilience</p>
+                <p style="margin-top: 1rem; font-size: 0.9rem;">Version 2.0.0 (AI Edition)</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/index">Home Page</a></li>
+                    <li><a href="/dashboard">Live Dashboard</a></li>
+                    <li><a href="/documentation">Documentation</a></li>
+                    <li><a href="https://gitlab.com/gitdeeper4/stalwart">GitLab</a></li>
+                    <li><a href="https://github.com/gitdeeper4/stalwart">GitHub</a></li>
+                    <li><a href="https://codeberg.org/gitdeeper4/stalwart">Codeberg</a></li>
+                    <li><a href="https://bitbucket.org/gitdeeper7/stalwart">Bitbucket</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Resources</h3>
+                <ul>
+                    <li><a href="https://doi.org/10.5281/zenodo.18655299">Research Paper (DOI)</a></li>
+                    <li><a href="https://pypi.org/project/stalwart-bridge/">PyPI Package</a></li>
+                    <li><a href="https://osf.io/7djga/">OSF Repository</a></li>
+                    <li><a href="https://huggingface.co/stalwart">Hugging Face Models</a></li>
+                    <li><a href="/reports">Generated Reports</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>© 2026 STALWART Research Team — Principal Investigator: Samir Baladi</p>
+            <p style="margin-top: 0.5rem;">Email: gitdeeper@gmail.com | ORCID: 0009-0003-8903-0029</p>
+            <p style="margin-top: 1rem;">DOI: 10.5281/zenodo.18655299 | License: MIT</p>
+        </div>
+    </footer>
+
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let map, markers = [], riskChart, criticalChart;
+        let allBridges = [];
+        let currentLeadTime = 12;
+
+        // بيانات الجسور من قاعدة البيانات
+        const bridgeData = [
+            { id: 1, name: 'Sunshine Skyway Bridge', location: 'USA', type: 'cable-stayed', health: 77, afc: 0.24, alsa: 0.56, ffd: 3.0, lat: 27.6245, lng: -82.6551 },
+            { id: 2, name: 'Brooklyn Bridge', location: 'USA', type: 'suspension', health: 79, afc: 0.42, alsa: 0.63, ffd: 3.4, lat: 40.7057, lng: -73.9964 },
+            { id: 3, name: 'Chesapeake Bay Bridge', location: 'USA', type: 'suspension', health: 80, afc: 0.43, alsa: 0.68, ffd: 3.6, lat: 38.9984, lng: -76.3766 },
+            { id: 4, name: 'Ponte Vecchio', location: 'Italy', type: 'arch', health: 83, afc: 0.24, alsa: 0.57, ffd: 2.3, lat: 43.7679, lng: 11.2532 },
+            { id: 5, name: 'Ponte di Rialto', location: 'Italy', type: 'arch', health: 85, afc: 0.32, alsa: 0.49, ffd: 2.0, lat: 45.4380, lng: 12.3360 },
+            { id: 6, name: 'Pont du Gard', location: 'France', type: 'arch', health: 86, afc: 0.29, alsa: 0.62, ffd: 3.2, lat: 43.9475, lng: 4.5353 },
+            { id: 7, name: 'San Francisco–Oakland Bay Bridge', location: 'USA', type: 'suspension', health: 87, afc: 0.48, alsa: 0.42, ffd: 2.7, lat: 37.7983, lng: -122.3778 },
+            { id: 8, name: 'West Gate Bridge', location: 'Australia', type: 'cable-stayed', health: 87, afc: 0.31, alsa: 0.54, ffd: 2.9, lat: -37.8167, lng: 144.8833 },
+            { id: 9, name: '25 de Abril Bridge', location: 'Portugal', type: 'suspension', health: 88, afc: 0.45, alsa: 0.59, ffd: 3.6, lat: 38.6897, lng: -9.1775 },
+            { id: 10, name: 'George Washington Bridge', location: 'USA', type: 'suspension', health: 89, afc: 0.21, alsa: 0.59, ffd: 3.1, lat: 40.8517, lng: -73.9527 },
+            { id: 11, name: 'Lions Gate Bridge', location: 'Canada', type: 'suspension', health: 90, afc: 0.44, alsa: 0.58, ffd: 3.1, lat: 49.3167, lng: -123.1333 },
+            { id: 12, name: 'Tower Bridge', location: 'UK', type: 'bascule', health: 91, afc: 0.47, alsa: 0.41, ffd: 2.7, lat: 51.5055, lng: -0.0754 },
+            { id: 13, name: 'Severn Bridge', location: 'UK', type: 'suspension', health: 91, afc: 0.23, alsa: 0.66, ffd: 4.0, lat: 51.6033, lng: -2.6350 },
+            { id: 14, name: 'Tacoma Narrows Bridge', location: 'USA', type: 'suspension', health: 92, afc: 0.26, alsa: 0.70, ffd: 2.0, lat: 47.2690, lng: -122.5517 },
+            { id: 15, name: 'Verrazzano-Narrows Bridge', location: 'USA', type: 'suspension', health: 93, afc: 0.41, alsa: 0.57, ffd: 2.0, lat: 40.6066, lng: -74.0447 },
+            { id: 16, name: 'Sydney Harbour Bridge', location: 'Australia', type: 'arch', health: 93, afc: 0.42, alsa: 0.52, ffd: 4.0, lat: -33.8523, lng: 151.2108 },
+            { id: 17, name: 'Golden Gate Bridge', location: 'USA', type: 'suspension', health: 94, afc: 0.44, alsa: 0.49, ffd: 2.3, lat: 37.8199, lng: -122.4783 },
+            { id: 18, name: 'Humber Bridge', location: 'UK', type: 'suspension', health: 94, afc: 0.22, alsa: 0.69, ffd: 3.8, lat: 53.7067, lng: -0.4500 },
+            { id: 19, name: 'Confederation Bridge', location: 'Canada', type: 'box girder', health: 94, afc: 0.28, alsa: 0.65, ffd: 2.4, lat: 46.1333, lng: -63.7667 },
+            { id: 20, name: 'Vasco da Gama Bridge', location: 'Portugal', type: 'cable-stayed', health: 95, afc: 0.27, alsa: 0.69, ffd: 1.2, lat: 38.7619, lng: -9.0453 },
+            { id: 21, name: 'Seto Ohashi Bridge', location: 'Japan', type: 'suspension', health: 95, afc: 0.29, alsa: 0.51, ffd: 2.4, lat: 34.4000, lng: 133.8000 },
+            { id: 22, name: 'Forth Bridge', location: 'UK', type: 'cantilever', health: 96, afc: 0.38, alsa: 0.49, ffd: 3.2, lat: 56.0004, lng: -3.3885 },
+            { id: 23, name: 'Sidney Lanier Bridge', location: 'China', type: 'cable-stayed', health: 96, afc: 0.30, alsa: 0.58, ffd: 3.1, lat: 30.5833, lng: 114.2667 },
+            { id: 24, name: 'Mackinac Bridge', location: 'USA', type: 'suspension', health: 97, afc: 0.48, alsa: 0.46, ffd: 2.5, lat: 45.8174, lng: -84.7278 },
+            { id: 25, name: 'Danyang–Kunshan Grand Bridge', location: 'China', type: 'viaduct', health: 97, afc: 0.40, alsa: 0.65, ffd: 1.8, lat: 31.5833, lng: 120.3333 },
+            { id: 26, name: 'Hong Kong–Zhuhai–Macau Bridge', location: 'China', type: 'cable-stayed', health: 97, afc: 0.22, alsa: 0.65, ffd: 3.2, lat: 22.0667, lng: 113.8333 },
+            { id: 27, name: 'Akashi Kaikyō Bridge', location: 'Japan', type: 'suspension', health: 98, afc: 0.40, alsa: 0.70, ffd: 3.6, lat: 34.6167, lng: 135.0167 },
+            { id: 28, name: 'Millau Viaduct', location: 'France', type: 'cable-stayed', health: 99, afc: 0.33, alsa: 0.47, ffd: 3.9, lat: 44.0783, lng: 3.0225 }
+        ];
+
+        function getRiskColor(risk) {
+            return risk === 'CRITICAL' ? '#e74c3c' : risk === 'HIGH_RISK' ? '#e67e22' : risk === 'CAUTION' ? '#f39c12' : risk === 'WARNING' ? '#f1c40f' : '#27ae60';
+        }
+
+        function getRiskLevel(health) {
+            return health >= 90 ? 'STABLE' : health >= 75 ? 'WARNING' : health >= 60 ? 'CAUTION' : health >= 40 ? 'HIGH_RISK' : 'CRITICAL';
+        }
+
+        function getHealthThreshold(months) {
+            return Math.max(60, 90 - months);
+        }
+
+        function initMap() {
+            map = L.map('bridge-map').setView([30, 0], 2);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '©CARTO', maxZoom: 12, minZoom: 2 }).addTo(map);
+            
+            L.control({ position: 'bottomright' }).onAdd = function() {
+                let div = L.DomUtil.create('div', 'info legend');
+                div.style.cssText = 'background:white; padding:12px; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.1); border:1px solid #ddd';
+                div.innerHTML = '<h4 style="margin:0 0 10px 0; color:#2c5f7d;">🌉 Bridge Risk</h4>' +
+                    '<i style="background:#e74c3c; width:12px; height:12px; display:inline-block; border-radius:50%;"></i> CRITICAL<br>' +
+                    '<i style="background:#e67e22; width:12px; height:12px; display:inline-block; border-radius:50%;"></i> HIGH RISK<br>' +
+                    '<i style="background:#f39c12; width:12px; height:12px; display:inline-block; border-radius:50%;"></i> CAUTION<br>' +
+                    '<i style="background:#f1c40f; width:12px; height:12px; display:inline-block; border-radius:50%;"></i> WARNING<br>' +
+                    '<i style="background:#27ae60; width:12px; height:12px; display:inline-block; border-radius:50%;"></i> STABLE';
+                return div;
+            }.addTo(map);
+        }
+
+        function updateMap(bridges) {
+            if (!map) return;
+            markers.forEach(m => map.removeLayer(m));
+            markers = bridges.map(b => {
+                let risk = getRiskLevel(b.health), color = getRiskColor(risk);
+                let marker = L.circleMarker([b.lat, b.lng], { radius: 8 + (100 - b.health)/10, fillColor: color, color: '#fff', weight: 2, fillOpacity: 0.8 }).addTo(map);
+                marker.bindPopup(`<div style="padding:12px"><h3 style="color:${color}">🌉 ${b.name}</h3><p><strong>Health:</strong> ${b.health}/100</p><p><strong>Status:</strong> ${risk}</p></div>`);
+                return marker;
+            });
+            if (markers.length) L.featureGroup(markers).getBounds().isValid() && map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
+        }
+
+        function updateUI() {
+            let threshold = getHealthThreshold(currentLeadTime);
+            document.getElementById('healthThreshold').innerText = threshold;
+            
+            let filtered = bridgeData.filter(b => b.health < threshold);
+            document.getElementById('riskStatsList').innerHTML = filtered.sort((a,b) => a.health - b.health).slice(0,15).map(b => {
+                let risk = getRiskLevel(b.health), color = getRiskColor(risk);
+                return `<div class="bridge-item"><span class="bridge-name"><span class="bridge-dot" style="background:${color};"></span> ${b.name} (${b.location})</span><span class="bridge-risk" style="color:${color};">${risk} • ${b.health}</span></div>`;
+            }).join('');
+            
+            let riskCounts = {CRITICAL:0, HIGH_RISK:0, CAUTION:0, WARNING:0, STABLE:0};
+            bridgeData.forEach(b => riskCounts[getRiskLevel(b.health)]++);
+            
+            if (riskChart) riskChart.destroy();
+            riskChart = new Chart(document.getElementById('riskChart'), {
+                type: 'doughnut', data: { labels: Object.keys(riskCounts), datasets: [{ data: Object.values(riskCounts), backgroundColor: ['#e74c3c','#e67e22','#f39c12','#f1c40f','#27ae60'], borderWidth:0 }] },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            let top5 = [...bridgeData].sort((a,b) => a.health - b.health).slice(0,5);
+            if (criticalChart) criticalChart.destroy();
+            criticalChart = new Chart(document.getElementById('criticalChart'), {
+                type: 'bar', data: { labels: top5.map(b => b.name.split(' ')[0]), datasets: [{ label: 'Health Score', data: top5.map(b => b.health), backgroundColor: top5.map(b => getRiskColor(getRiskLevel(b.health))), borderRadius:8 }] },
+                options: { responsive: true, scales: { y: { beginAtZero: true, max: 100 } }, plugins: { legend: { display: false } } }
+            });
+            
+            document.getElementById('bridgesContainer').innerHTML = bridgeData.sort((a,b) => a.health - b.health).map(b => {
+                let risk = getRiskLevel(b.health), color = getRiskColor(risk);
+                return `<div class="bridge-card" style="border-left-color:${color};">
+                    <div class="bridge-header"><span class="bridge-name"><i class="fas fa-bridge"></i> ${b.name}</span><span class="bridge-location">${b.location}</span></div>
+                    <div class="health-score" style="color:${color};">${b.health}/100<span class="warning-badge">⚠️ ${b.health < threshold ? 'Alert' : 'Stable'}</span></div>
+                    <div style="margin-bottom:10px;"><span class="risk-badge" style="background:${color}20; color:${color};">${risk}</span></div>
+                    <div class="bridge-details"><div class="detail-item"><span class="detail-label">AFC</span><span class="detail-value">${b.afc}</span></div><div class="detail-item"><span class="detail-label">ALSA</span><span class="detail-value">${b.alsa}</span></div><div class="detail-item"><span class="detail-label">FFD</span><span class="detail-value">${b.ffd}%</span></div></div>
+                </div>`;
+            }).join('');
+            
+            updateMap(bridgeData);
+        }
+
+        document.getElementById('timeSlider').addEventListener('input', function(e) {
+            currentLeadTime = e.target.value;
+            document.getElementById('leadTimeLabel').innerHTML = currentLeadTime + ' months';
+            updateUI();
+        });
+
+        window.toggleMenu = () => document.getElementById('navLinks').classList.toggle('active');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            document.getElementById('lastUpdate').innerHTML = new Date().toLocaleTimeString();
+            updateUI();
+        });
+    </script>
+</body>
+</html>

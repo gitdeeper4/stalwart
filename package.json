@@ -1,0 +1,22 @@
+{
+  "name": "stalwart-netlify",
+  "version": "2.0.0",
+  "description": "Netlify configuration for STALWART Bridge Monitoring System",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'Static site - no build required'",
+    "deploy": "netlify deploy --prod"
+  },
+  "keywords": [
+    "bridge-monitoring",
+    "structural-health",
+    "netlify",
+    "serverless"
+  ],
+  "author": "Samir Baladi",
+  "license": "MIT",
+  "dependencies": {
+    "@netlify/functions": "^1.0.0"
+  }
+}

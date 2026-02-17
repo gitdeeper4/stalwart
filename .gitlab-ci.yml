@@ -1,0 +1,173 @@
+# STALWART GitLab CI/CD Pipeline
+# Version: 1.0.0
+# Date: 2026-02-16
+
+stages:
+  - test
+  - build
+  - deploy
+  - publish
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
+  STALWART_VERSION: "1.0.0"
+  STALWART_DOI: "10.5281/zenodo.18655299"
+
+cache:
+  paths:
+    - .cache/pip
+    - venv/
+  key: "$CI_COMMIT_REF_SLUG"
+
+before_script:
+  - python -V
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+  - pip install -e .
+
+# Test Stage
+test:lint:
+  stage: test
+  script:
+    - pip install flake8 mypy black
+    - flake8 src/ tests/ --max-line-length=88
+    - mypy src/
+    - black --check src/ tests/
+  artifacts:
+    reports:
+      codequality: flake8-report.txt
+  only:
+    - main
+    - merge_requests
+
+test:unit:
+  stage: test
+  script:
+    - pip install pytest pytest-cov pytest-asyncio
+    - pytest tests/unit/ -v --cov=src/stalwart --cov-report=term-missing --cov-report=xml
+  artifacts:
+    reports:
+      cobertura: coverage.xml
+  only:
+    - main
+    - merge_requests
+
+test:integration:
+  stage: test
+  script:
+    - pip install pytest pytest-cov
+    - pytest tests/integration/ -v --cov=src/stalwart --cov-append
+  only:
+    - main
+    - merge_requests
+
+test:performance:
+  stage: test
+  script:
+    - python scripts/performance_test.py --quick
+  only:
+    - main
+  allow_failure: true
+
+# Build Stage
+build:python:
+  stage: build
+  script:
+    - pip install build twine
+    - python -m build
+    - twine check dist/*
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - main
+    - tags
+
+build:docker:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA $CI_REGISTRY_IMAGE:latest
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
+    - tags
+
+build:docs:
+  stage: build
+  script:
+    - pip install sphinx sphinx-rtd-theme
+    - cd docs && make html
+    - cd ..
+  artifacts:
+    paths:
+      - docs/_build/html/
+  only:
+    - main
+
+# Deploy Stage
+deploy:staging:
+  stage: deploy
+  script:
+    - echo "Deploying to staging environment..."
+    - ./scripts/deploy.sh --env=staging
+  environment:
+    name: staging
+    url: https://staging.stalwart-bridge.netlify.app
+  only:
+    - main
+  when: manual
+
+deploy:production:
+  stage: deploy
+  script:
+    - echo "Deploying to production environment..."
+    - ./scripts/deploy.sh --env=production
+  environment:
+    name: production
+    url: https://stalwart-bridge.netlify.app
+  only:
+    - tags
+  when: manual
+
+# Publish Stage
+publish:pypi:
+  stage: publish
+  script:
+    - pip install twine
+    - python -m build
+    - twine upload --skip-existing dist/*
+  only:
+    - tags
+  when: manual
+
+publish:zenodo:
+  stage: publish
+  script:
+    - echo "Publishing to Zenodo with DOI $STALWART_DOI"
+    - ./scripts/publish_zenodo.sh --doi=$STALWART_DOI --version=$STALWART_VERSION
+  only:
+    - tags
+  when: manual
+
+pages:
+  stage: deploy
+  script:
+    - pip install sphinx sphinx-rtd-theme
+    - cd docs && make html
+    - mv _build/html ../public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

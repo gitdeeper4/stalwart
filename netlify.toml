@@ -1,0 +1,54 @@
+[build]
+  functions = "functions"
+  publish = "public"
+
+[build.environment]
+  STALWART_VERSION = "2.0.0"
+  DATABASE_URL = "postgresql://localhost:5432/stalwart"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard"
+  to = "/dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/docs"
+  to = "/documentation.html"
+  status = 200
+
+[[redirects]]
+  from = "/reports"
+  to = "/reports/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/research"
+  to = "/research/STALWART_Research_Paper.md"
+  status = 200
+
+[[redirects]]
+  from = "/gitlab"
+  to = "https://gitlab.com/gitdeeper4/stalwart"
+  status = 301
+
+[[redirects]]
+  from = "/github"
+  to = "https://github.com/gitdeeper4/stalwart"
+  status = 301
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"

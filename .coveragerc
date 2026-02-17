@@ -1,0 +1,29 @@
+[run]
+source = src/stalwart
+omit = 
+    */tests/*
+    */test_*
+    */.git/*
+    */__pycache__/*
+    */.pytest_cache/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if __name__ == .__main__.:
+    raise AssertionError
+    raise NotImplementedError
+    pass
+    return NotImplemented
+
+show_missing = True
+skip_covered = True
+precision = 2
+
+[html]
+directory = coverage_html
+title = STALWART Coverage Report
+
+[xml]
+output = coverage.xml

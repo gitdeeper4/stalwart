@@ -1,0 +1,17 @@
+# STALWART Report Generator Cron Configuration
+# Add to crontab with: crontab -e
+
+# Generate daily reports at 00:05 every day
+5 0 * * * cd /storage/emulated/0/Download/stalwart && ./reports/generate.sh daily >> ./reports/cron.log 2>&1
+
+# Generate weekly reports on Monday at 00:10
+10 0 * * 1 cd /storage/emulated/0/Download/stalwart && ./reports/generate.sh weekly >> ./reports/cron.log 2>&1
+
+# Generate monthly reports on 1st of month at 00:15
+15 0 1 * * cd /storage/emulated/0/Download/stalwart && ./reports/generate.sh monthly >> ./reports/cron.log 2>&1
+
+# Archive old reports on 1st of month at 01:00
+0 1 1 * * cd /storage/emulated/0/Download/stalwart && ./reports/generate.sh archive >> ./reports/cron.log 2>&1
+
+# Or use the cron option which handles all scheduling logic
+# 0 0 * * * cd /storage/emulated/0/Download/stalwart && ./reports/generate.sh cron >> ./reports/cron.log 2>&1
